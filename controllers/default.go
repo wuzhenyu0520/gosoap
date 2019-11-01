@@ -80,18 +80,18 @@ func (c *ProxyApiController) AllMethod() {
 		wsdl_data := Parserequestxml(encode_req_data_str, token)
 		//fmt.Println(wsdl_data)
 		// Request wsdl with pared xml data
-		wsdl_resq_code, wsdl_resq_body := RequestWSDL(wsdl_data)
+		wsdl_resp_code, wsdl_resp_body := RequestWSDL(wsdl_data)
 		//c.Ctx.WriteString(strconv.Itoa(wsdl_resq_code))
 		//c.Ctx.WriteString(wsdl_resq_body)
-		if wsdl_resq_code == 200 {
-			resq_reslut := Decoderesponsexml([]byte(wsdl_resq_body))
+		if wsdl_resp_code == 200 {
+			resq_reslut := Decoderesponsexml([]byte(wsdl_resp_body))
 			resq_data := resq_reslut.SoapenvBody.EbsCsgMessage.Return.Message
 			resq_code := resq_reslut.SoapenvBody.EbsCsgMessage.Return.Code
 			if resq_code == "00" {
-				beego.Info("response from wsdl is: ", resq_data)
+				beego.Info("response from wsdl is: ", DecodingData([]byte(resq_data)))
 				c.Ctx.WriteString(resq_data)
 			} else {
-				beego.Error("respose from wsdl is: ", resq_data)
+				beego.Error("respose from wsdl is: ", DecodingData([]byte(resq_data)))
 				c.Ctx.WriteString(resq_data)
 			}
 		} else {
@@ -299,8 +299,13 @@ func RequestHTTP(data string) (wsdl_code string, body string){
 			return "99","Failed request to http server"
 		}
 		defer resp.Body.Close()
-		result, _ := ioutil.ReadAll(resp.Body)
-		return "00", string(result)
+		if resp.StatusCode == 200 {
+			result, _ := ioutil.ReadAll(resp.Body)
+			return "00", string(result)
+		} else {
+			result, _ := ioutil.ReadAll(resp.Body)
+			return "99", string(result)
+		}
 	} else {
 		requesturl := http_server + request.RequestURI
 		req, err := http.NewRequest(request.Method, requesturl, strings.NewReader(request.Body))
@@ -323,7 +328,12 @@ func RequestHTTP(data string) (wsdl_code string, body string){
 			return "99","Failed request to http server"
 		}
 		defer resp.Body.Close()
-		result, _ := ioutil.ReadAll(resp.Body)
-		return "00", string(result)
+		if resp.StatusCode == 200 {
+			result, _ := ioutil.ReadAll(resp.Body)
+			return "00", string(result)
+		} else {
+			result, _ := ioutil.ReadAll(resp.Body)
+			return "99", string(result)
+		}
 	}
 }
