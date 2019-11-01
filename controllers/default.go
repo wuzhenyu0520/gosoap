@@ -112,14 +112,14 @@ func (c *ProxyApiController) AllMethod() {
 		// Decode data by base64
 		response_code, response_body := RequestHTTP(DecodingData([]byte(wsdl_req_data)))
 		if response_code == "00" {
-			wsdl_resp_data := Parseresponsexml(response_code, response_body)
+			wsdl_resp_data := Parseresponsexml(response_code, EncodingData(response_body))
 			beego.Info("response code:", response_code)
-			beego.Info("response body:", response_body)
+			beego.Info("response body:", string(response_body))
 			c.Ctx.WriteString(wsdl_resp_data)
 		} else {
-			wsdl_resp_data := Parseresponsexml(response_code, response_body)
+			wsdl_resp_data := Parseresponsexml(response_code, EncodingData(response_body))
 			beego.Error("response code:", response_code)
-			beego.Error("response body:", response_body)
+			beego.Error("response body:", string(response_body))
 			c.Ctx.WriteString(wsdl_resp_data)
 		}
 	}
@@ -257,7 +257,7 @@ func RequestWSDL(data string) (http_code int, body string){
 }
 
 // Request http with decoded xml data
-func RequestHTTP(data string) (wsdl_code string, body string){
+func RequestHTTP(data string) (wsdl_code string, body []byte){
 	type Request struct {
 		Body string `json:"body"`
 		Headers string `json:"headers"`
@@ -296,15 +296,15 @@ func RequestHTTP(data string) (wsdl_code string, body string){
 		resp, error := client.Do(req)
 		if error != nil {
 			beego.Error("Failed request to http server")
-			return "99","Failed request to http server"
+			return "99", []byte("Failed request to http server")
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode == 200 {
 			result, _ := ioutil.ReadAll(resp.Body)
-			return "00", string(result)
+			return "00", result
 		} else {
 			result, _ := ioutil.ReadAll(resp.Body)
-			return "99", string(result)
+			return "99", result
 		}
 	} else {
 		requesturl := http_server + request.RequestURI
@@ -325,15 +325,15 @@ func RequestHTTP(data string) (wsdl_code string, body string){
 		resp, error := client.Do(req)
 		if error != nil {
 			beego.Error("Failed request to http server")
-			return "99","Failed request to http server"
+			return "99", []byte("Failed request to http server")
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode == 200 {
 			result, _ := ioutil.ReadAll(resp.Body)
-			return "00", string(result)
+			return "00", result
 		} else {
 			result, _ := ioutil.ReadAll(resp.Body)
-			return "99", string(result)
+			return "99", result
 		}
 	}
 }
